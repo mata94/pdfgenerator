@@ -9,7 +9,10 @@ use App\Domain\Pdf\Repositories\Interfaces\PdfJobRepositoryInterface;
 use App\Infrastructure\Pdf\Processors\GhostscriptProcessor;
 use App\Infrastructure\Pdf\Processors\ImageMagickProcessor;
 use App\Infrastructure\Pdf\Processors\LibreOfficeProcessor;
+use App\Infrastructure\Pdf\Processors\OcrProcessor;
+use App\Infrastructure\Pdf\Processors\QpdfProcessor;
 use App\Infrastructure\Pdf\Processors\TabulaProcessor;
+use App\Infrastructure\Pdf\Processors\WatermarkProcessor;
 use App\Models\PdfJob;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -22,6 +25,9 @@ class PdfConversionService
         private GhostscriptProcessor $ghostscriptProcessor,
         private ImageMagickProcessor $imageMagickProcessor,
         private TabulaProcessor $tabulaProcessor,
+        private QpdfProcessor $qpdfProcessor,
+        private WatermarkProcessor $watermarkProcessor,
+        private OcrProcessor $ocrProcessor,
     ) {
     }
 
@@ -49,6 +55,32 @@ class PdfConversionService
                 PdfOperation::PDF_TO_PNG => $this->imageMagickProcessor->pdfToImage($inputPath, $outputBasename, 'png'),
                 PdfOperation::JPG_TO_PDF, PdfOperation::PNG_TO_PDF => $this->imageMagickProcessor->imageToPdf($inputPath, $outputBasename),
                 PdfOperation::COMPRESS => $this->ghostscriptProcessor->compress($inputPath, $outputBasename.'-compressed.pdf'),
+                PdfOperation::ROTATE => $this->qpdfProcessor->rotate(
+                    $inputPath,
+                    $outputBasename.'-rotated.pdf',
+                    (int) ($job->options['angle'] ?? 90),
+                    $job->options['pages'] ?? null,
+                ),
+                PdfOperation::PROTECT => $this->qpdfProcessor->encrypt(
+                    $inputPath,
+                    $outputBasename.'-protected.pdf',
+                    (string) ($job->options['password'] ?? ''),
+                ),
+                PdfOperation::UNLOCK => $this->qpdfProcessor->decrypt(
+                    $inputPath,
+                    $outputBasename.'-unlocked.pdf',
+                    (string) ($job->options['password'] ?? ''),
+                ),
+                PdfOperation::WATERMARK => $this->watermark(
+                    $inputPath,
+                    $outputBasename.'-watermarked.pdf',
+                    (string) ($job->options['text'] ?? ''),
+                ),
+                PdfOperation::OCR => $this->ocrProcessor->ocr(
+                    $inputPath,
+                    $outputBasename.'-ocr.pdf',
+                    $job->options['language'] ?? 'eng',
+                ),
             };
         } catch (\RuntimeException $e) {
             $this->repository->update($job, ['status' => PdfJobStatus::FAILED->value]);
@@ -76,6 +108,19 @@ class PdfConversionService
             return $this->libreOfficeProcessor->convert($csvPath, $outputDir, 'xlsx', 'CSV:44,34,UTF8');
         } finally {
             @unlink($csvPath);
+        }
+    }
+
+    private function watermark(string $inputPath, string $outputPath, string $text): string
+    {
+        $stampPath = $outputPath.'.stamp.pdf';
+
+        $this->watermarkProcessor->createStamp($inputPath, $stampPath, $text);
+
+        try {
+            return $this->qpdfProcessor->overlay($inputPath, $stampPath, $outputPath);
+        } finally {
+            @unlink($stampPath);
         }
     }
 }

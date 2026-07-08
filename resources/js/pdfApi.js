@@ -1,11 +1,17 @@
 import { api, ensureCsrfCookie } from './bootstrap';
 
-export async function uploadFile(file, operation) {
+export async function uploadFile(file, operation, options = null) {
     await ensureCsrfCookie();
 
     const formData = new FormData();
     formData.append('file', file);
     formData.append('operation', operation);
+
+    if (options) {
+        Object.entries(options).forEach(([key, value]) => {
+            formData.append(`options[${key}]`, value);
+        });
+    }
 
     const response = await api.post(route('api.v1.pdf.upload'), formData, {
         headers: { 'Content-Type': 'multipart/form-data' },

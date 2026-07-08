@@ -7,14 +7,14 @@ export function useConversionFlow() {
     const errorCode = ref('');
     const errorMessage = ref('');
 
-    async function run(file, operation) {
+    async function run(file, operation, options = null) {
         status.value = 'uploading';
         errorCode.value = '';
         errorMessage.value = '';
         job.value = null;
 
         try {
-            const uploaded = await uploadFile(file, operation);
+            const uploaded = await uploadFile(file, operation, options);
             status.value = 'converting';
             job.value = await convertJob(uploaded.id);
             status.value = 'completed';

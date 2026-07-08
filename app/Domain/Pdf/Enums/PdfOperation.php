@@ -17,4 +17,10 @@ enum PdfOperation: string
     case PNG_TO_PDF   = 'png_to_pdf';
 
     case COMPRESS     = 'compress';
+
+    case ROTATE       = 'rotate';
+    case PROTECT      = 'protect';
+    case UNLOCK       = 'unlock';
+    case WATERMARK    = 'watermark';
+    case OCR          = 'ocr';
 }

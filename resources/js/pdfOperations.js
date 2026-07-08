@@ -84,6 +84,79 @@ export const PDF_OPERATIONS = [
         accept: '.pdf',
         fileType: 'pdf',
     },
+    {
+        value: 'rotate',
+        label: 'Rotate PDF',
+        description: 'Rotate all pages',
+        accept: '.pdf',
+        fileType: 'pdf',
+        optionsSchema: [
+            {
+                key: 'angle',
+                type: 'select',
+                label: 'Rotation angle',
+                options: [
+                    { value: 90, label: '90°' },
+                    { value: 180, label: '180°' },
+                    { value: 270, label: '270°' },
+                ],
+                required: true,
+            },
+        ],
+    },
+    {
+        value: 'protect',
+        label: 'Protect PDF',
+        description: 'Add a password',
+        accept: '.pdf',
+        fileType: 'pdf',
+        optionsSchema: [
+            {
+                key: 'password',
+                type: 'password',
+                label: 'Password',
+                required: true,
+            },
+        ],
+    },
+    {
+        value: 'unlock',
+        label: 'Unlock PDF',
+        description: 'Remove a password',
+        accept: '.pdf',
+        fileType: 'pdf',
+        optionsSchema: [
+            {
+                key: 'password',
+                type: 'password',
+                label: 'Current password',
+                required: true,
+            },
+        ],
+    },
+    {
+        value: 'watermark',
+        label: 'Watermark PDF',
+        description: 'Add a text watermark',
+        accept: '.pdf',
+        fileType: 'pdf',
+        optionsSchema: [
+            {
+                key: 'text',
+                type: 'text',
+                label: 'Watermark text',
+                placeholder: 'CONFIDENTIAL',
+                required: true,
+            },
+        ],
+    },
+    {
+        value: 'ocr',
+        label: 'OCR PDF',
+        description: 'Make a scanned PDF searchable',
+        accept: '.pdf',
+        fileType: 'pdf',
+    },
 ];
 
 const EXTENSION_TO_OPERATION = {

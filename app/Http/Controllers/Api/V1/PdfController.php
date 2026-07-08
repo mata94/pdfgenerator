@@ -28,6 +28,7 @@ class PdfController extends Controller
         $command = new UploadPdfCommand();
         $command->setUploadedFile($request->file('file'));
         $command->setOperation($request->input('operation'));
+        $command->setOptions($request->input('options'));
         $command->setUser(auth()->user());
         $command->setSessionId(session()->getId());
 

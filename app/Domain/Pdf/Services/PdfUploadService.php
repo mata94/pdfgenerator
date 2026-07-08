@@ -30,6 +30,7 @@ class PdfUploadService
             'input_file' => $path,
             'operation' => $command->getOperation(),
             'status' => PdfJobStatus::PENDING->value,
+            'options' => $command->getOptions(),
             'expires_at' => now()->addHours(24),
         ]);
     }

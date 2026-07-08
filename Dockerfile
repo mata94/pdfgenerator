@@ -9,7 +9,8 @@ RUN apt-get update && apt-get install -y \
     libxml2-dev libzip-dev \
     libfreetype6-dev libjpeg62-turbo-dev libpng-dev \
     fonts-dejavu-core \
-    libreoffice ghostscript imagemagick \
+    libreoffice ghostscript imagemagick qpdf \
+    ocrmypdf tesseract-ocr \
  && docker-php-ext-configure gd --with-freetype --with-jpeg \
  && docker-php-ext-install -j"$(nproc)" pdo_mysql zip gd bcmath \
  && rm -rf /var/lib/apt/lists/*

@@ -938,7 +938,7 @@ FILESYSTEM_DISK=local
 All features are broken down into individual files located in:
 
 ```
-.claude/
+claude/
 ├── features/       ← pending features (implement these next)
 │   ├── 01-setup.md
 │   ├── 02-auth.md
@@ -952,11 +952,11 @@ All features are broken down into individual files located in:
 ### ⚠️ IMPORTANT — Read before every task
 
 **Before starting any work, always:**
-1. Read all files in `.claude/features/` to see what is pending
-2. Find the lowest-numbered file that is NOT yet in `.claude/completed/`
+1. Read all files in `claude/features/` to see what is pending
+2. Find the lowest-numbered file that is NOT yet in `claude/completed/`
 3. That is the next feature to implement
 4. Only work on one feature at a time
-5. When a feature is fully complete, remind the user to move the file from `.claude/features/` to `.claude/completed/`
+5. When a feature is fully complete, remind the user to move the file from `claude/features/` to `claude/completed/`
 
 
-> Update this table manually as features are completed: change ⬜ to ✅ and move the file to `.claude/completed/`.
+> Update this table manually as features are completed: change ⬜ to ✅ and move the file to `claude/completed/`.

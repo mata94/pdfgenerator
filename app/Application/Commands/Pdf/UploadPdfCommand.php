@@ -10,6 +10,7 @@ class UploadPdfCommand
     private UploadedFile $uploadedFile;
     private string $operation;
     private string $sessionId;
+    private ?array $options = null;
     private ?User $user = null;
 
     public function getUploadedFile(): UploadedFile
@@ -40,6 +41,16 @@ class UploadPdfCommand
     public function setSessionId(string $sessionId): void
     {
         $this->sessionId = $sessionId;
+    }
+
+    public function getOptions(): ?array
+    {
+        return $this->options;
+    }
+
+    public function setOptions(?array $options): void
+    {
+        $this->options = $options;
     }
 
     public function getUser(): ?User

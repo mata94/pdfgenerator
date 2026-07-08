@@ -6,6 +6,7 @@ import UploadZone from '../Components/UploadZone.vue';
 import ToolCard from '../Components/ToolCard.vue';
 import EmailCaptureModal from '../Components/EmailCaptureModal.vue';
 import GuestLimitBanner from '../Components/GuestLimitBanner.vue';
+import OperationOptionsModal from '../Components/OperationOptionsModal.vue';
 import { PDF_OPERATIONS, findOperation, operationForFile } from '../pdfOperations';
 import { useConversionFlow } from '../useConversionFlow';
 import { saveGuestEmail, downloadJob, triggerBlobDownload } from '../pdfApi';
@@ -18,6 +19,7 @@ const pendingFile = ref(null);
 
 const showEmailModal = ref(false);
 const emailBusy = ref(false);
+const showOptionsModal = ref(false);
 const downloadError = ref('');
 const guestLimitReached = ref(false);
 
@@ -37,6 +39,7 @@ function selectTool(operation) {
     pendingFile.value = null;
     downloadError.value = '';
     guestLimitReached.value = false;
+    showOptionsModal.value = false;
     reset();
 
     // The tool grid lives below the hero, so bring the (now context-aware)
@@ -71,10 +74,24 @@ async function startConversion() {
         return;
     }
 
+    if (selectedOperation.value.optionsSchema?.length) {
+        showOptionsModal.value = true;
+        return;
+    }
+
+    await performConversion();
+}
+
+async function submitOptions(options) {
+    showOptionsModal.value = false;
+    await performConversion(options);
+}
+
+async function performConversion(options = null) {
     downloadError.value = '';
     guestLimitReached.value = false;
 
-    await run(pendingFile.value, selectedOperation.value.value);
+    await run(pendingFile.value, selectedOperation.value.value, options);
 
     if (errorCode.value === 'guest_limit_reached') {
         guestLimitReached.value = true;
@@ -83,6 +100,7 @@ async function startConversion() {
 
 function startOver() {
     reset();
+    showOptionsModal.value = false;
     selectedOperation.value = null;
     pendingFile.value = null;
     downloadError.value = '';
@@ -190,6 +208,14 @@ async function performDownload() {
             :busy="emailBusy"
             @submit="submitEmail"
             @close="showEmailModal = false"
+        />
+
+        <OperationOptionsModal
+            :visible="showOptionsModal"
+            :operation="selectedOperation"
+            :busy="isBusy"
+            @submit="submitOptions"
+            @close="showOptionsModal = false"
         />
     </AppLayout>
 </template>

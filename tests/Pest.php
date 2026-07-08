@@ -37,6 +37,40 @@ function fakePdfUpload(string $name = 'sample.pdf'): \Illuminate\Http\UploadedFi
     return \Illuminate\Http\UploadedFile::fake()->createWithContent($name, samplePdfContent());
 }
 
+function encryptedPdfUpload(string $password, string $name = 'encrypted.pdf'): \Illuminate\Http\UploadedFile
+{
+    $tmpIn = tempnam(sys_get_temp_dir(), 'pdfin').'.pdf';
+    $tmpOut = tempnam(sys_get_temp_dir(), 'pdfout').'.pdf';
+    file_put_contents($tmpIn, samplePdfContent());
+
+    exec('qpdf --encrypt '.escapeshellarg($password).' '.escapeshellarg($password).' 256 -- '.escapeshellarg($tmpIn).' '.escapeshellarg($tmpOut).' 2>&1');
+
+    $content = file_get_contents($tmpOut);
+    @unlink($tmpIn);
+    @unlink($tmpOut);
+
+    return \Illuminate\Http\UploadedFile::fake()->createWithContent($name, $content);
+}
+
+/**
+ * A real, image-only (no text layer) PDF — rendered from a PNG via ImageMagick
+ * — for exercising the actual OCR pipeline rather than a fake with no content.
+ */
+function scannedPdfUpload(string $text = 'HELLO WATERMARK', string $name = 'scanned.pdf'): \Illuminate\Http\UploadedFile
+{
+    $tmpImage = tempnam(sys_get_temp_dir(), 'scanimg').'.png';
+    $tmpPdf = tempnam(sys_get_temp_dir(), 'scanpdf').'.pdf';
+
+    exec('convert -size 400x150 xc:white -gravity center -pointsize 28 -fill black -annotate 0 '.escapeshellarg($text).' '.escapeshellarg($tmpImage).' 2>&1');
+    exec('convert '.escapeshellarg($tmpImage).' '.escapeshellarg($tmpPdf).' 2>&1');
+
+    $content = file_get_contents($tmpPdf);
+    @unlink($tmpImage);
+    @unlink($tmpPdf);
+
+    return \Illuminate\Http\UploadedFile::fake()->createWithContent($name, $content);
+}
+
 function samplePngContent(): string
 {
     return base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAIAAAAmkwkpAAAAEElEQVR4nGP4z8AARwzEcQCukw/x0F8jngAAAABJRU5ErkJggg==');
@@ -53,12 +87,13 @@ function fakePngUpload(string $name = 'sample.png'): \Illuminate\Http\UploadedFi
  * is the "end-to-end testing of all conversions" checklist item, not a
  * mocked unit test.
  */
-function convertOperation(Tests\TestCase $testCase, string $operation, \Illuminate\Http\UploadedFile $file): array
+function convertOperation(Tests\TestCase $testCase, string $operation, \Illuminate\Http\UploadedFile $file, ?array $options = null): array
 {
-    $uploadResponse = $testCase->postJson('/api/v1/pdf/upload', [
+    $uploadResponse = $testCase->postJson('/api/v1/pdf/upload', array_filter([
         'file' => $file,
         'operation' => $operation,
-    ])->assertOk();
+        'options' => $options,
+    ], fn ($value) => $value !== null))->assertOk();
 
     $jobId = $uploadResponse->json('id');
 
